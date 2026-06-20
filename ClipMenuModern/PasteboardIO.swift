@@ -1,13 +1,26 @@
 import Cocoa
+import CoreFoundation
 import ImageIO
 
 final class PasteboardIO {
+    private static let urlPasteboardType = NSPasteboard.PasteboardType("public.url")
+    private static let quotedHrefRegex = try? NSRegularExpression(
+        pattern: #"(?is)<a\b[^>]*\bhref\s*=\s*(["'])(.*?)\1"#
+    )
+    private static let unquotedHrefRegex = try? NSRegularExpression(
+        pattern: #"(?is)<a\b[^>]*\bhref\s*=\s*([^\s>]+)"#
+    )
+
     static func readCurrent(settings: AppSettings) -> ClipItem? {
         autoreleasepool {
             let pb = NSPasteboard.general
-            if settings.captureFiles,
-               let urls = pb.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty {
-                return ClipItem(type: .fileURLs, fileURLs: urls.map { $0.path })
+            let urls = pb.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] ?? []
+
+            if settings.captureFiles {
+                let fileURLs = urls.filter(\.isFileURL)
+                if !fileURLs.isEmpty {
+                    return ClipItem(type: .fileURLs, fileURLs: fileURLs.map(\.path))
+                }
             }
             if settings.captureImages,
                let image = NSImage(pasteboard: pb), let png = image.optimizedPNGData() {
@@ -18,12 +31,67 @@ final class PasteboardIO {
                 }
                 return item
             }
-            if settings.captureText,
-               let string = pb.string(forType: .string), !string.isEmpty {
-                return ClipItem(type: .text, text: string)
+            if settings.captureText {
+                if let webURL = firstWebURL(in: pb, objectURLs: urls) {
+                    return ClipItem(type: .text, text: webURL.absoluteString)
+                }
+                if let string = pb.string(forType: .string), !string.isEmpty {
+                    return ClipItem(type: .text, text: string)
+                }
             }
             return nil
         }
+    }
+
+    private static func firstWebURL(in pasteboard: NSPasteboard, objectURLs: [URL]) -> URL? {
+        if let url = objectURLs.first(where: isWebURL) {
+            return url
+        }
+
+        if let rawURL = pasteboard.string(forType: urlPasteboardType),
+           let url = normalizedWebURL(from: rawURL) {
+            return url
+        }
+
+        if let html = pasteboard.string(forType: .html) {
+            return firstWebURL(inHTML: html)
+        }
+
+        return nil
+    }
+
+    private static func normalizedWebURL(from value: String) -> URL? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed), isWebURL(url) else { return nil }
+        return url
+    }
+
+    private static func isWebURL(_ url: URL) -> Bool {
+        guard let scheme = url.scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https"
+    }
+
+    private static func firstWebURL(inHTML html: String) -> URL? {
+        let patterns = [(quotedHrefRegex, 2), (unquotedHrefRegex, 1)]
+        let searchRange = NSRange(html.startIndex..<html.endIndex, in: html)
+
+        for (regex, captureGroup) in patterns {
+            guard let regex,
+                  let match = regex.firstMatch(in: html, range: searchRange),
+                  let range = Range(match.range(at: captureGroup), in: html) else { continue }
+
+            let escaped = String(html[range])
+            let decoded = (CFXMLCreateStringByUnescapingEntities(
+                nil,
+                escaped as CFString,
+                nil
+            ) as String?) ?? escaped
+
+            if let url = normalizedWebURL(from: decoded) {
+                return url
+            }
+        }
+        return nil
     }
 
     static func write(_ item: ClipItem) {
