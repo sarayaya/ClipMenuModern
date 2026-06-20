@@ -26,6 +26,12 @@ This repository does not contain the author's clipboard history, personal snippe
 - macOS 12.0 or later
 - Xcode with the macOS SDK
 
+## Download
+
+Prebuilt universal macOS packages are available on the [Releases](https://github.com/sarayaya/ClipMenuModern/releases) page.
+
+The current package is not notarized with an Apple Developer ID. On first launch, Control-click the app, choose **Open**, then confirm **Open**. macOS may also require approval in **System Settings → Privacy & Security**.
+
 ## Build
 
 1. Clone this repository.
