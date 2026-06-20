@@ -2,6 +2,12 @@
 
 A lightweight clipboard history manager for macOS, rebuilt with Swift and AppKit. It runs in the menu bar and supports text, image, and file clipboard entries.
 
+## Acknowledgements
+
+ClipMenuModern is an independent modern reimplementation inspired by [ClipMenu](https://github.com/naotaka/ClipMenu), the original macOS clipboard manager created by [Naotaka Morimoto](https://github.com/naotaka). Its menu-bar workflow and clipboard-management concepts provided the foundation and inspiration for this project.
+
+This project is not an official continuation of ClipMenu. Sincere thanks to Naotaka Morimoto for creating and open-sourcing the original application. The original MIT copyright notice is preserved in [LICENSE](LICENSE).
+
 ## Features
 
 - Clipboard history for text, images, and files
@@ -43,4 +49,4 @@ Automatic paste may require Accessibility permission in **System Settings → Pr
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE), which preserves the original ClipMenu copyright notice.
