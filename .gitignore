@@ -1,0 +1,32 @@
+# Xcode build output
+DerivedData/
+.derivedData/
+build/
+*.xcarchive
+*.dSYM
+
+# Per-user Xcode state
+xcuserdata/
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# macOS metadata
+.DS_Store
+
+# Local ClipMenuModern user data — never commit clipboard content
+history.json
+snippets.json
+settings.json
+Images/
+ClipMenuModern-data/
+
+# Credentials and local environment files
+.env
+.env.*
+*.pem
+*.p12
+*.mobileprovision
