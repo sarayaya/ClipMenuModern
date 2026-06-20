@@ -1,6 +1,7 @@
 # Xcode build output
 DerivedData/
 .derivedData/
+.derivedData*/
 build/
 *.xcarchive
 *.dSYM
